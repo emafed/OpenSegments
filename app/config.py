@@ -1,0 +1,24 @@
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+FILES_DIR = ROOT / "files"
+DATA_DIR = ROOT / "data"
+CACHE_DIR = DATA_DIR / "cache"
+DB_PATH = DATA_DIR / "app.db"
+
+GARMIN_DIR = FILES_DIR / "garmin"
+GARMIN_TOKENSTORE = DATA_DIR / "garmin_tokens.json"
+GARMIN_CONFIG = DATA_DIR / "garmin_config.json"
+
+TOLERANCE_M = 25.0
+COVERAGE_MIN = 0.80
+MAX_GAP_FACTOR = 3.0
+LENGTH_TOL = 0.25
+HEADING_TOL_DEG = 45.0
+
+COARSE_TARGET_GAP_M = 250.0
+COARSE_MAX_POINTS = 3000
+
+MIN_SEGMENT_LEN_M = 20.0
+MAP_MAX_POINTS = 20000
+CHART_MAX_POINTS = 4000

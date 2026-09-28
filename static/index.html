@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenSegments</title>
+<link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="/static/style.css?v=__ASSET_V__">
+</head>
+<body>
+<header>
+  <div class="brand">OpenSegments</div>
+  <div class="header-actions">
+    <span id="scan-status" class="muted"></span>
+    <div id="scan-box" class="scan-box hidden">
+      <div class="scan-bar"><div id="scan-bar-fill"></div></div>
+      <span id="scan-text" class="muted"></span>
+    </div>
+    <span id="garmin-status" class="muted"></span>
+    <button id="btn-app-settings" class="ghost icon-only" title="Impostazioni">&#9881;</button>
+  </div>
+</header>
+<main>
+  <aside id="sidebar">
+    <div class="side-section grow">
+      <div class="side-head">
+        <strong>Attività</strong>
+        <span id="activity-count" class="muted"></span>
+      </div>
+      <div class="activity-filters">
+        <input id="activity-filter" placeholder="Filtra per nome o data...">
+        <select id="activity-sport" title="Filtra le attività per sport">
+          <option value="">Tutti gli sport</option>
+        </select>
+      </div>
+      <ul id="activity-list" class="scroll"></ul>
+    </div>
+    <div class="side-section">
+      <div class="side-head">
+        <strong>Segmenti salvati</strong>
+        <span id="segments-count" class="muted"></span>
+      </div>
+      <ul id="segments-list" class="scroll segments"></ul>
+    </div>
+  </aside>
+  <button id="btn-sidebar-toggle" title="Nascondi selettore attività">&#8249;</button>
+  <div id="sidebar-resizer" title="Trascina per ridimensionare"></div>
+  <section id="content">
+    <div id="topbar">
+      <div class="tb-row">
+        <button id="btn-pick">Seleziona sulla mappa</button>
+        <button id="btn-save-segment" class="ghost" disabled>Salva segmento</button>
+        <button id="btn-recalc" class="ghost hidden">Ricalcola</button>
+        <button id="btn-search" class="primary" disabled>Cerca passaggi</button>
+        <span id="seg-info" class="muted">Seleziona un'attività dalla lista, poi indica inizio e fine con la mappa o con il selettore qui sotto.</span>
+        <span id="seg-fine" class="fine hidden">
+          <span class="fine-item">Inizio <button data-nudge="start:-1">&#9664;</button><button data-nudge="start:1">&#9654;</button></span>
+          <span class="fine-item">Fine <button data-nudge="end:-1">&#9664;</button><button data-nudge="end:1">&#9654;</button></span>
+        </span>
+      </div>
+      <div id="range-wrap" class="hidden">
+        <div class="rs-head">
+          <span id="rs-start-label">0:00</span>
+          <span id="rs-info" class="muted"></span>
+          <span id="rs-end-label">0:00</span>
+          <button id="rs-reset" class="rs-reset" type="button" title="Azzera segmento">&#8634;</button>
+        </div>
+        <div id="range-slider">
+          <div class="rs-track"></div>
+          <div id="rs-fill" class="rs-fill" title="Trascina per spostare il segmento mantenendo durata e lunghezza"></div>
+          <div class="rs-handle" id="rs-handle-start" title="Inizio segmento"></div>
+          <div class="rs-handle" id="rs-handle-end" title="Fine segmento"></div>
+        </div>
+      </div>
+      <div id="search-status" class="muted"></div>
+    </div>
+    <div id="map-wrap">
+      <div id="map-popup-bar">
+        <span>Mappa</span>
+        <button id="map-popup-close" title="Chiudi mappa">&#215;</button>
+      </div>
+      <div id="map"></div>
+      <div id="map-popup-grip" title="Ridimensiona"></div>
+    </div>
+    <button id="map-bubble" class="hidden" title="Riapri la mappa">Mappa</button>
+    <div id="panel-resizer" title="Trascina per ridimensionare mappa e pannelli"></div>
+    <div id="bottom">
+      <nav class="tabs">
+        <button class="tab active" data-tab="analysis">Analisi attività</button>
+        <button class="tab" data-tab="compare">Confronto</button>
+        <button class="tab" data-tab="trend">Andamento</button>
+        <span class="tabs-right">
+          <button id="btn-zoom-reset" class="ghost hidden" title="Rimuovi lo zoom e torna alla vista completa">Rimuovi zoom</button>
+        </span>
+      </nav>
+      <div class="tab-panel" id="tab-analysis">
+        <div id="analysis-empty" class="muted">Seleziona un'attività e un segmento (sulla mappa o con il selettore temporale) per analizzare i parametri dell'attività.</div>
+        <div id="analysis-layout" class="hidden">
+          <div class="compare-toolbar">
+            <span class="muted">Attributi:</span>
+            <div id="analysis-chips" class="metric-chips"></div>
+            <label class="x-axis">Asse X
+              <select id="analysis-x-axis">
+                <option value="dist">Distanza dall'inizio (m)</option>
+                <option value="time">Tempo relativo (s)</option>
+              </select>
+            </label>
+            <label class="x-axis"><input id="analysis-single" type="checkbox"> Grafico unico</label>
+            <button id="btn-analysis-search" class="primary">Cerca questo segmento tra le attività</button>
+          </div>
+          <div id="analysis-info" class="muted"></div>
+          <div id="analysis-charts"></div>
+        </div>
+      </div>
+      <div class="tab-panel hidden" id="tab-compare">
+        <div id="compare-empty" class="muted">Esegui una ricerca con il pulsante "Cerca passaggi": qui trovi l'elenco delle attività sul segmento e i grafici di confronto.</div>
+        <details id="results-details" class="hidden">
+          <summary id="results-summary">Risultati</summary>
+          <div id="results-wrap">
+            <div class="results-head">
+              <strong id="results-count"></strong>
+              <span class="row">
+                <button id="btn-sel-all" class="ghost">Tutti</button>
+                <button id="btn-sel-none" class="ghost">Nessuno</button>
+                <button id="btn-compare" class="primary">Confronta selezionati</button>
+                <button id="btn-trend" class="ghost icon-only" title="Andamento dei parametri nelle attività">
+                  <svg viewBox="0 0 16 16"><path d="M2 13.5V2.5M2 13.5h12"/><path d="M4.5 11l3-3.5 2.5 2 3.5-5"/><circle cx="4.5" cy="11" r="1"/><circle cx="7.5" cy="7.5" r="1"/><circle cx="10" cy="9.5" r="1"/><circle cx="13.5" cy="4.5" r="1"/></svg>
+                </button>
+              </span>
+            </div>
+            <div class="table-scroll">
+              <table id="results-table">
+                <thead>
+                  <tr>
+                    <th></th><th>Attività</th><th>Data</th><th>Durata</th><th>Dist.</th>
+                    <th>Vel. media</th><th>HR</th><th>Match</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </details>
+        <div id="compare-layout" class="hidden">
+          <aside id="compare-side">
+            <div class="side-head">
+              <strong>Attività sul segmento</strong>
+              <span class="side-tools">
+                <span id="compare-count" class="muted"></span>
+                <div class="cmp-tools">
+                  <button id="btn-compare-tools" class="ghost icon-only" title="Filtra e ordina">
+                    <svg viewBox="0 0 16 16"><path d="M2 2.5h12L9.5 8v5.2l-3-1.5V8L2 2.5Z"/></svg>
+                  </button>
+                  <div id="compare-tools-panel" class="cs-panel hidden">
+                    <div class="popup-actions">
+                      <button id="cmp-tools-reset" class="popup-revert" type="button" title="Ripristina filtri e ordinamento iniziali">&#8634;</button>
+                      <button class="popup-close" data-close="compare-tools-panel" type="button" title="Chiudi">&#215;</button>
+                    </div>
+                    <h4>Filtra e ordina</h4>
+                    <label class="cmp-field">Dal
+                      <input id="cmp-date-from" type="date">
+                    </label>
+                    <label class="cmp-field">Al
+                      <input id="cmp-date-to" type="date">
+                    </label>
+                    <label class="cmp-field">Ordina per
+                      <select id="cmp-sort">
+                        <option value="time">Tempo (più veloci)</option>
+                        <option value="date_desc">Data (più recenti)</option>
+                        <option value="date_asc">Data (più vecchie)</option>
+                      </select>
+                    </label>
+                  </div>
+                </div>
+              </span>
+            </div>
+            <div class="row">
+              <button id="btn-cmp-all" class="ghost" title="Aggiungi le prime 5 della lista">Prime 5</button>
+              <button id="btn-cmp-none" class="ghost">Rimuovi tutte</button>
+            </div>
+            <ul id="compare-list"></ul>
+          </aside>
+          <div id="compare-main">
+            <div class="compare-toolbar">
+              <span class="muted">Attributi:</span>
+              <div id="metric-chips" class="metric-chips"></div>
+              <label class="x-axis">Asse X
+                <select id="x-axis">
+                  <option value="dist">Distanza dall'inizio (m)</option>
+                  <option value="time">Tempo relativo (s)</option>
+                </select>
+              </label>
+              <label class="x-axis"><input id="compare-single" type="checkbox"> Grafico unico</label>
+            </div>
+            <div id="compare-legend" class="legend"></div>
+            <div id="charts"></div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-panel hidden" id="tab-trend">
+        <div id="trend-empty" class="muted">Esegui una ricerca con il pulsante "Cerca passaggi": qui trovi l'andamento di uno o più parametri nelle attività dei risultati.</div>
+        <div id="trend-layout" class="hidden">
+          <div class="compare-toolbar">
+            <span class="muted">Attributi:</span>
+            <div id="trend-chips" class="metric-chips"></div>
+            <label class="x-axis">Ordina per
+              <select id="trend-sort">
+                <option value="date_asc">Data (più vecchie)</option>
+                <option value="date_desc">Data (più recenti)</option>
+                <option value="time">Tempo (più veloci)</option>
+              </select>
+            </label>
+          </div>
+          <div id="trend-info" class="muted"></div>
+          <div id="trend-charts"></div>
+          <div id="trend-range-wrap" class="hidden">
+            <div class="rs-head">
+              <span id="trs-start-label">—</span>
+              <span id="trs-info" class="muted"></span>
+              <span id="trs-end-label">—</span>
+              <button id="trs-reset" class="rs-reset" type="button" title="Mostra di nuovo tutte le date">&#8634;</button>
+            </div>
+            <div id="trend-range-slider">
+              <div class="rs-track"></div>
+              <div id="trs-fill" class="rs-fill" title="Trascina per spostare il periodo mantenendone l'ampiezza"></div>
+              <div class="rs-handle" id="trs-handle-start" title="Data iniziale"></div>
+              <div class="rs-handle" id="trs-handle-end" title="Data finale"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<div id="app-settings-backdrop" class="modal-backdrop hidden"></div>
+<div id="app-settings-panel" class="app-modal hidden" role="dialog" aria-modal="true" aria-label="Impostazioni">
+  <div class="modal-head">
+    <h3>Impostazioni</h3>
+    <button id="app-settings-close" class="popup-close" type="button" title="Chiudi">&#215;</button>
+  </div>
+  <div class="modal-body">
+    <section class="as-section">
+      <h4>Sorgente FIT</h4>
+      <div id="source-switch" class="source-switch" title="Sorgente delle attività">
+        <button data-source="local" class="active">Cartella locale</button>
+        <button data-source="garmin">Garmin Connect</button>
+      </div>
+      <div id="local-actions" class="as-sub">
+        <h4>Cartella locale</h4>
+        <div class="as-buttons">
+          <button id="btn-scan" title="Indicizza solo i file nuovi o modificati">Aggiorna</button>
+          <button id="btn-force" class="ghost" title="Reindicizza tutti i file FIT da zero">Forza refresh</button>
+        </div>
+      </div>
+      <div id="garmin-actions" class="as-sub hidden">
+        <div class="as-head">
+          <h4>Garmin Connect</h4>
+          <button id="gp-reset" class="popup-revert" type="button" title="Ripristina impostazioni Garmin iniziali">&#8634;</button>
+        </div>
+        <button id="btn-garmin-sync" class="primary" title="Scarica le nuove attività da Garmin Connect">Sincronizza</button>
+        <div id="gp-login">
+          <h4>Accedi a Garmin Connect</h4>
+          <label class="gp-field">Email
+            <input id="gp-email" type="email" autocomplete="username" placeholder="nome@esempio.it">
+          </label>
+          <label class="gp-field">Password
+            <input id="gp-password" type="password" autocomplete="current-password">
+          </label>
+          <button id="gp-login-btn" class="primary">Accedi</button>
+          <div id="gp-mfa" class="hidden">
+            <p class="muted">Garmin richiede il codice di verifica a due passaggi.</p>
+            <label class="gp-field">Codice MFA
+              <input id="gp-mfa-code" inputmode="numeric" autocomplete="one-time-code">
+            </label>
+            <button id="gp-mfa-btn">Conferma codice</button>
+          </div>
+        </div>
+        <div id="gp-account" class="hidden">
+          <h4>Account</h4>
+          <div id="gp-user" class="muted"></div>
+          <label class="check"><input id="gp-auto" type="checkbox" checked> Sincronizza automaticamente all'avvio</label>
+          <label class="check"><input id="gp-gps" type="checkbox" checked> Importa solo attività con GPS</label>
+          <label class="gp-field">Sport
+            <select id="gp-sport">
+              <option value="">Tutti</option>
+              <option value="running">Corsa</option>
+              <option value="cycling">Bici</option>
+              <option value="swimming">Nuoto</option>
+              <option value="hiking">Escursionismo</option>
+              <option value="walking">Camminata</option>
+              <option value="multi_sport">Multi sport</option>
+              <option value="fitness_equipment">Indoor / fitness</option>
+              <option value="other">Altro</option>
+            </select>
+          </label>
+          <h4>Importa storico</h4>
+          <div class="gp-dates">
+            <label class="gp-field">Dal <input id="gp-from" type="date"></label>
+            <label class="gp-field">Al <input id="gp-to" type="date"></label>
+          </div>
+          <div class="gp-buttons">
+            <button id="gp-bulk" class="primary">Importa storico</button>
+            <button id="gp-logout" class="ghost">Esci</button>
+          </div>
+          <div class="muted gp-hint">Senza date importa tutto lo storico disponibile.</div>
+        </div>
+        <div id="gp-progress" class="hidden">
+          <div id="gp-progress-text" class="muted"></div>
+          <div class="gp-bar"><div id="gp-progress-fill"></div></div>
+          <button id="gp-cancel" class="ghost">Annulla</button>
+        </div>
+        <div id="gp-msg" class="gp-msg"></div>
+      </div>
+    </section>
+    <section class="as-section">
+      <div class="as-head">
+        <h4>Ricerca segmento</h4>
+        <button id="search-reset" class="popup-revert" type="button" title="Ripristina impostazioni di ricerca iniziali">&#8634;</button>
+      </div>
+      <div class="settings-grid">
+        <label>Strategia
+          <select id="opt-strategy">
+            <option value="endpoints">Inizio + fine in ordine</option>
+            <option value="overlap">Overlap traccia</option>
+            <option value="both">Entrambi (AND)</option>
+          </select>
+        </label>
+        <label>Tolleranza (m)
+          <input id="opt-tolerance" type="number" value="25" min="1" max="500" step="5">
+        </label>
+        <label>Direzione
+          <select id="opt-direction">
+            <option value="same">Stesso verso</option>
+            <option value="both">Entrambi i versi</option>
+          </select>
+        </label>
+        <label>Coverage minima (%)
+          <input id="opt-coverage" type="number" value="80" min="5" max="100" step="5">
+        </label>
+        <label>Scarto lunghezza (%)
+          <input id="opt-length-tol" type="number" value="25" min="5" max="75" step="5">
+        </label>
+        <label class="check">
+          <input id="opt-heading" type="checkbox" checked> Verifica bussola
+        </label>
+        <label class="check">
+          <input id="opt-same-sport" type="checkbox" checked> Solo stesso sport
+        </label>
+      </div>
+    </section>
+    <section class="as-section">
+      <div class="as-head">
+        <h4>Visualizzazione</h4>
+        <button id="cs-reset" class="popup-revert" type="button" title="Ripristina valori iniziali">&#8634;</button>
+      </div>
+      <label class="cs-row">Altezza base (px)
+        <input id="cs-height" type="range" min="150" max="600" step="10" value="250">
+        <span id="cs-height-val" class="cs-val">250</span>
+      </label>
+      <label class="cs-row">Spaziatura tra grafici (px)
+        <input id="cs-gap" type="range" min="0" max="80" step="2" value="18">
+        <span id="cs-gap-val" class="cs-val">18</span>
+      </label>
+      <label class="cs-row">Scala orizzontale (%)
+        <input id="cs-xscale" type="range" min="50" max="200" step="5" value="100">
+        <span id="cs-xscale-val" class="cs-val">100</span>
+      </label>
+      <label class="cs-row">Scala verticale (%)
+        <input id="cs-yscale" type="range" min="50" max="200" step="5" value="100">
+        <span id="cs-yscale-val" class="cs-val">100</span>
+      </label>
+      <label class="cs-row">Testo assi (px)
+        <input id="cs-font" type="range" min="9" max="18" step="1" value="11">
+        <span id="cs-font-val" class="cs-val">11</span>
+      </label>
+      <div class="cs-row-group">
+        <span class="cs-label">Vista</span>
+        <div id="layout-buttons" class="icon-row">
+          <button class="icon-toggle" data-layout="vertical" title="Sopra/sotto">
+            <svg viewBox="0 0 16 16"><rect x="1.5" y="1.5" width="13" height="5.5" rx="1"/><rect x="1.5" y="9" width="13" height="5.5" rx="1"/></svg>
+          </button>
+          <button class="icon-toggle" data-layout="split" title="Affiancati">
+            <svg viewBox="0 0 16 16"><rect x="1.5" y="1.5" width="5.5" height="13" rx="1"/><rect x="9" y="1.5" width="5.5" height="13" rx="1"/></svg>
+          </button>
+          <button class="icon-toggle" data-layout="popup" title="Mappa popup">
+            <svg viewBox="0 0 16 16"><rect x="1.5" y="4.5" width="10" height="10" rx="1"/><rect x="7.5" y="1.5" width="7" height="7" rx="1"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="cs-row-group">
+        <span class="cs-label">Mappa</span>
+        <div class="icon-row">
+          <button id="btn-map-toggle" class="icon-toggle active" title="Mostra/nascondi la mappa">
+            <svg viewBox="0 0 16 16"><path d="M8 1.8a4.2 4.2 0 0 0-4.2 4.2c0 3.1 4.2 7.4 4.2 7.4s4.2-4.3 4.2-7.4A4.2 4.2 0 0 0 8 1.8Z"/><circle cx="8" cy="6" r="1.6"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+<div id="toast"></div>
+<script src="/static/vendor/leaflet/leaflet.js"></script>
+<script src="/static/vendor/chart.umd.min.js"></script>
+<script src="/static/app.js?v=__ASSET_V__"></script>
+</body>
+</html>

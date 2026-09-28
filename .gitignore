@@ -1,0 +1,23 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Personal data and secrets (created locally at runtime)
+# data/  -> SQLite DB, track cache, Garmin tokens, preferences, logs
+# files/ -> your FIT activities (manual and Garmin downloads)
+data/
+files/
+
+# Logs
+*.log
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
