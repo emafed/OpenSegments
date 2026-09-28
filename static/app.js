@@ -1127,6 +1127,7 @@ async function refreshCompare() {
       await ensureCompareProfile();
     } catch (_) { /* ignore */ }
   }
+  if (state.tab !== "compare") return;
   renderMetricChips();
   renderLegend();
   renderCharts();
@@ -2944,6 +2945,7 @@ async function refreshAnalysis() {
     toast(`Errore caricamento dati: ${e.message}`);
     return;
   }
+  if (state.tab !== "analysis") return;
   renderAnalysisChips();
   renderAnalysisCharts();
 }
@@ -2984,7 +2986,9 @@ function renderAnalysisCharts() {
 function scheduleAnalysisRefresh() {
   if (state.tab !== "analysis") return;
   clearTimeout(state.analysisTimer);
-  state.analysisTimer = setTimeout(() => refreshAnalysis(), 250);
+  state.analysisTimer = setTimeout(() => {
+    if (state.tab === "analysis") refreshAnalysis();
+  }, 250);
 }
 
 /* ---------------- SCAN ---------------- */

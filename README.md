@@ -4,26 +4,15 @@ Local platform for analyzing your FIT files: reverse segment search across your 
 
 ## What it does
 
-- Indexes `.fit` files from the `files\` folder (including subfolders).
-- **Garmin Connect mode** (selectable from the header): sign in with your account, import your history with a progress bar, and automatically sync new activities on every startup. FIT files are downloaded to `files\garmin\` and indexed like any other file.
-- Select a segment on an activity in two ways:
-  - click on the map (start and end, with snapping to real GPS points and fine adjustment);
-  - two-handle time selector below the map (drag the handles to isolate the section).
-- Search all indexed activities for the ones passing over that segment (strategies: start+end in order, track overlap, both).
-- Strava-style comparison: list of activities on the segment, up to **5 activities at the same time** (the 5 fastest efforts are added on first load; you can then select/deselect from the list), toggle attributes on/off (speed, **pace per km**, HR, **efficiency (EF)**, cadence, elevation, power, temperature, grade, and **elevation profile** as a gray area), separate charts or a single chart with all metrics. The activity list has a funnel icon menu to **filter by date and sort by date or time**.
-- Synchronized cursor: hovering a chart draws a vertical line on all charts, and the point values of each activity at that position (distance or time) are shown in a fixed column on the right of the **Single chart** (with no cursor it shows segment averages; each value's dot has the metric color); on the map, one dot per tracked activity follows the selected position and disappears when the mouse leaves the chart.
-- Single chart, Strava style: one band per metric with its own scale (pace is inverted: faster at the top), scale labels per band, and a magnifier icon on every chart (the chart expands into the app area, closes with X or Esc; it does not trigger system fullscreen); even when expanded, the attribute chips stay in the chart title so you can add or remove metrics. The **Elevation** chip adds the elevation profile as a gray area at the bottom (in comparisons it uses the source activity's profile).
-- Default attributes by sport: running → **pace** + **HR**, cycling → **speed** + **HR** (other sports: speed + pace).
-- Single activity analysis: parameter charts of the activity over the isolated segment, with a button to search for the same segment across all activities.
-- **Trend** of parameters: from the search results, the button with the chart icon opens the tab of the same name; each activity in the results is a column on the horizontal axis (left to right, in the chosen order and with the Compare filters) and the attributes enabled through the chips (speed, **pace**, HR, **efficiency (EF)**, cadence, elevation, power, temperature, grade) are plotted on the vertical axis, each with its own color and scale. Values appear in the fixed column on the right (activity averages without the cursor, activity value under the cursor, as in the Single chart); click a point to center that effort on the map. At the bottom, a two-handle selector, similar to the segment one, **narrows the date range**: drag the handles or the bar to move the window (numbers and scales adapt to the selected period), or press **All dates** to see everything again.
-- Segment saving: the segment and the matches found are stored in SQLite and reloaded instantly on later launches. Recompute with a button.
-- If an activity passes over the same segment multiple times (e.g. out and back), each effort is a separate result with the suffix `_1`, `_2`, `_3` (e.g. `Sab_26_09_2026_2`) both in the search results and in the comparison selector, so you can pick and compare the individual effort.
-- Activity update: incremental scan ("Refresh") or full scan ("Force refresh").
-- Chart zoom: drag the mouse on a chart to select a range and zoom into that section; the zoom also updates the yellow segment selector (and vice versa), and it works in both travel directions; the **Reset zoom** button (or double-click on the chart) returns to the full view.
-- Match search is limited to the same sport as the source activity (running only searches runs, cycling only rides; can be disabled with "Same sport only" in the settings) and to the same segment length (adjustable maximum deviation, default ±25%), so false matches with very different lengths are excluded.
-- Hidden **⚙** menu (top right): chart height, spacing, horizontal and vertical scale, axis text size, icon-based layout selector (above/below, side by side, map popup), and show/hide map. All settings panels open on top of the interface, with **X to close** and **↺ to restore the initial values**; preferences (charts, search, layout, sorting) are **saved automatically to the database on every change**, with no save button.
-- Flexible layout: map above/below or beside the panels, with a **draggable divider between map and panels** (proportions are remembered per view) and automatic resizing of map and charts; map in a mobile popup, closable (with a bubble to reopen it), resizable sidebar.
-- Indexing progress bar in the header (current files and percentage).
+- Indexes `.fit` files from the `files\` folder (including subfolders), with incremental ("Refresh") or full ("Force refresh") scans.
+- **Garmin Connect mode**: sign in with your account, import your history, and automatically sync new activities on every startup. FIT files are downloaded to `files\garmin\` and indexed like any other file.
+- Select a segment on an activity by clicking on the map (A/B points) or with the two-handle time selector.
+- Search all indexed activities for the ones passing over that segment (strategies: endpoints in order, track overlap, both), with same-sport and length-deviation filters.
+- Strava-style comparison of up to **5 activities at a time**, with toggleable metrics (speed, **pace per km**, HR, **efficiency (EF)**, cadence, elevation, power, temperature, grade, elevation profile), separate charts or a single chart with all metrics, a synchronized cursor, and date filtering/sorting.
+- Single activity analysis: parameter charts of the activity over the isolated segment.
+- **Trend** tab: plots each activity from the search results on the horizontal axis and the selected metrics on the vertical axis, with a date-range selector.
+- Segment and matches are saved in SQLite and reloaded instantly on later launches.
+- UI preferences (charts, search, layout, sorting) are saved automatically to the database, with flexible map/chart layout options.
 
 ## Architecture
 
