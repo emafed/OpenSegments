@@ -141,20 +141,12 @@ To stop the server: `Ctrl+C` in the terminal, close the window, or run **`stop.b
 ## How to use it
 
 1. Open the **⚙** menu in the top right and use **Aggiorna** (Refresh) — or **Forza refresh** (Force refresh) on first use — to index the files in `files\`.
-2. **Garmin Connect mode**: from the **⚙** menu choose "Garmin Connect".
-   - On first use, sign in with email and password; if the account has two-step verification, the MFA code field appears. The password is never saved: only the session token remains in `data\garmin_tokens.json`.
-   - On later launches, login happens automatically with the saved token (no password prompt): if the token is no longer valid, the login panel opens with the error message.
-   - **Importa storico** (Import history): downloads activities (all of them, or only the selected date range) with tracked progress and a Cancel button. The FIT files go to `files\garmin\` and are indexed automatically.
-   - **Sincronizza** (Sync): downloads only new activities. With "Sync automatically at startup" enabled, the check starts by itself on every program launch (after the first import).
-   - From the **⚙** menu you can limit the import to GPS activities only, filter by sport, and log out.
+2. **Garmin Connect mode**: from the **⚙** menu choose "Garmin Connect" and sign in (MFA code if enabled; the password is never saved, only the session token in `data\garmin_tokens.json`). Use **Importa storico** (Import history) for the full or date-range import and **Sincronizza** (Sync) for new activities; later launches log in automatically.
 3. Select an activity from the sidebar: its track appears on the map.
-4. Isolate the segment with the bar always visible at the top: click "Select on map" (A and B) or drag the handles of the **time selector**. Drag the **yellow bar** of the selector to move the segment forward/backward while keeping duration and length; adjust with the ◀▶ arrows or by dragging the A/B markers. The search settings (strategy, tolerance, direction, coverage, length deviation, same sport only, compass) are in the gear menu to the right of the bar.
-5. Choose:
-   - **Cerca passaggi** (Search matches): finds all activities that passed over the segment; results appear in the Compare tab in a collapsible panel, and the segment can be saved to have it ready in the future;
-   - **Analisi attività** (Activity analysis, tab of the same name): parameter charts of the activity over the selected section; from here, "Search this segment across activities".
-6. In the **Confronto** (Compare) tab: on first load the **5 fastest efforts** on the segment are added; you can select/deselect activities from the list (maximum 5 at a time, "Prime 5" (Top 5) adds the first 5 of the filtered list) and use the funnel icon to filter by date or sort by date/time, toggle attributes with the chips, choose the X axis (distance or time) and the **Grafico unico** (Single chart) option (all metrics in one banded chart).
-7. Hover the charts: cursor and point values are synchronized across all curves; in the **Single chart** the values appear fixed in the right-hand column (segment averages without the cursor, point values under the cursor) and one dot per activity follows the map selection. Charts are colored by metric (speed blue, pace lime, HR red, efficiency EF pink, cadence purple, elevation green, power orange, temperature light blue, grade yellow) and activities are distinguished by line style. The **Efficienza (EF)** (Efficiency) chart plots speed in m/min divided by heart rate: higher = more efficient. To enlarge a section, **drag the mouse** on a chart: on release the zoom is applied to all charts and the yellow segment selector updates accordingly (it also works on matches in the reverse direction); use **Rimuovi zoom** (Reset zoom) or double-click to return to the full view. The magnifier icon on each chart opens that chart in the full app area (close with X or Esc). With the **⚙** icon next to the tabs you adjust charts, layout, and map.
-8. **Layout and screen**: drag the sidebar edge to resize it and the **divider between map and panels** to adjust the space (map above/below or beside); from the **⚙** icon next to the tabs choose the icon view Above/below (Sopra/sotto), Side by side (Affiancati — map and panels next to each other), or Map popup (Mappa popup — map as a movable, resizable window, closable with × and reopenable with the "Mappa" bubble), plus **show/hide map**.
+4. Isolate the segment with the bar at the top: click "Select on map" (A and B) or drag the handles of the **time selector**; move it with the yellow bar or the ◀▶ arrows. Search settings (strategy, tolerance, direction, coverage, length deviation, same sport only, compass) are in the gear menu to the right of the bar.
+5. Choose **Cerca passaggi** (Search matches) to find all activities that passed over the segment (results appear in the Compare tab and the segment can be saved), or **Analisi attività** (Activity analysis) for parameter charts of the selected section.
+6. In the **Confronto** (Compare) tab, compare up to **5 activities** (the 5 fastest are added on first load), toggle metrics with the chips, filter by date or sort by date/time with the funnel icon, and choose the X axis or the **Grafico unico** (Single chart) view. Hovering the charts synchronizes the cursor and point values, dragging zooms into a range, and the magnifier icon expands a chart.
+7. **Layout**: drag the sidebar edge and the map/panels divider to resize them, or use the **⚙** icon next to the tabs to switch layout (above/below, side by side, map popup) and show/hide the map.
 
 ## Tests
 
@@ -174,14 +166,3 @@ To stop the server: `Ctrl+C` in the terminal, close the window, or run **`stop.b
 - Garmin mode: this is an unofficial client (the `garminconnect` library), so it requires internet and may ask you to log in again if Garmin invalidates the token. The password is used only for login and is never written to disk; the `data\garmin_tokens.json` file must be treated like a password.
 - Garmin import: already-downloaded IDs are not downloaded again; activities deleted from Garmin are not removed locally; activities without GPS are excluded by default. "Cancel" stops the current download; already-saved activities remain.
 - FIT files downloaded from Garmin live in `files\garmin\` and should not be renamed/moved manually.
-
-## Privacy and repository notes
-
-This project is designed to run locally and to keep your personal data out of version control. Before publishing on GitHub, never commit the following:
-
-- `data\` — SQLite database, track cache, Garmin tokens, and saved preferences (personal and secret data);
-- `files\` — your original FIT activities and the Garmin downloads (personal data);
-- `.venv\`, `__pycache__\`, `.pytest_cache\` — generated artifacts;
-- `*.log` — server logs.
-
-A `.gitignore` covering all of these is included in the repository.
